@@ -1,1 +1,1 @@
-appLogger - 2020-03-23 13:34:39,040-2560-DEBUG-Log starts here
+appLogger - 2020-03-28 12:36:16,718-13188-INFO-[('Size:(width, height): ', (512, 512)), ('Format: ', 'PNG'), ('Mode: ', 'RGB'), ('Max and min values of RGB: ', ((54, 255), (3, 248), (8, 225))), ('Pixel data at (0,0) : ', (226, 137, 125))]
