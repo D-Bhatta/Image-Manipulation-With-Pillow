@@ -46,15 +46,43 @@ class Pillow(object):
         draw.multiline_text((0,0), 'Pillow Sample', fill=(0,0,0), font=font)
         
         self.save_img_jpg("pillow_drawing1", im)
+    def crop(self):
+        self.load()
+        im = self.im
+        im_crop = im.crop((120,80,400,150))
+        self.save_img_jpg("cropped_img", im_crop)
+    def crop_center(self, im, crop_width, crop_height):
+        img_width, img_height = im.size
+
+        return im.crop((((img_width-crop_width)//2),
+                        ((img_height-crop_height)//2),
+                        ((img_width+crop_width)//2),
+                        ((img_height+crop_height)//2))
+                                                    )
+    def center_crop(self):
+        self.load()
+        im = self.im
+        self.crop_center(im, 150, 200)
+        self.save_img_jpg("center_cropped", im)
+    def max_square_crop(self):
+        self.load()
+        im = self.im
+        self.crop_center(im, (min(im.size)), (min(im.size)))
+        self.save_img_jpg("square_crop", im)
     
 
 
 
 
 pill = Pillow()
-lg.info(pill.pillow_image_data())
+lg.info("printing image data...")
 pill.print_data(pill.pillow_image_data())
+lg.info("processing image...")
 pill.process_image()
+lg.info("Drawing a new image...")
 pill.draw()
-
+lg.info("Cropping the image custom, center, and max square...")
+pill.crop()
+pill.center_crop()
+pill.max_square_crop()
 

@@ -15,7 +15,7 @@ Tutorial Followed : [Pillow Tag at https://note.nkmk.me/en/](https://note.nkmk.m
 ## Sections
 
 1. [x] How to use Pillow (PIL: Python Imaging Library)
-2. [ ] Crop a part of the image with Python, Pillow (trimming)
+2. [x] Crop a part of the image with Python, Pillow (trimming)
 3. [ ] Invert image with Python, Pillow (Negative / positive inversion)
 4. [ ] Generate square or circular thumbnail images with Python, Pillow
 5. [ ] Concatenate images with Python, Pillow
