@@ -1,7 +1,7 @@
 import logging
 import logging.config
 from json import load as jload
-from PIL import Image, ImageFilter,ImageDraw, ImageFont
+from PIL import Image, ImageFilter,ImageDraw, ImageFont, ImageOps
 
 # Configure logger lg with config for appLogger from config.json["logging"]
 with open('config.json', 'r') as f:
@@ -69,8 +69,20 @@ class Pillow(object):
         im = self.im
         self.crop_center(im, (min(im.size)), (min(im.size)))
         self.save_img_jpg("square_crop", im)
-    
-
+    def invert_image(self):
+        """ Inverting an image with the invert function in the experimental ImageOps module """
+        self.load()
+        im = self.im
+        # invert the image
+        im_invert = ImageOps.invert(im)
+        self.save_img_jpg("inverted", im_invert)
+    def invert_rgba(self):
+        """ Inverting a transparent png with mode RBGA """
+        # convert to RGB from RGBA
+        im = Image.open("src/horse.png")
+        im = im.convert("RGB")
+        im_invert = ImageOps.invert(im)
+        self.save_img_jpg("inverted_rgba", im_invert)
 
 
 
@@ -85,4 +97,8 @@ lg.info("Cropping the image custom, center, and max square...")
 pill.crop()
 pill.center_crop()
 pill.max_square_crop()
+lg.info("Inverting an RGB and an RGBA image")
+pill.invert_image()
+pill.invert_rgba()
+
 
