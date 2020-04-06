@@ -2,6 +2,8 @@ import logging
 import logging.config
 from json import load as jload
 from PIL import Image, ImageFilter,ImageDraw, ImageFont, ImageOps
+# for batch processing
+import os, glob
 
 # Configure logger lg with config for appLogger from config.json["logging"]
 with open('config.json', 'r') as f:
@@ -62,12 +64,12 @@ class Pillow(object):
     def center_crop(self):
         self.load()
         im = self.im
-        self.crop_center(im, 150, 200)
+        im = self.crop_center(im, 150, 200)
         self.save_img_jpg("center_cropped", im)
     def max_square_crop(self):
         self.load()
         im = self.im
-        self.crop_center(im, (min(im.size)), (min(im.size)))
+        im = self.crop_center(im, (min(im.size)), (min(im.size)))
         self.save_img_jpg("square_crop", im)
     def invert_image(self):
         """ Inverting an image with the invert function in the experimental ImageOps module """
@@ -83,7 +85,73 @@ class Pillow(object):
         im = im.convert("RGB")
         im_invert = ImageOps.invert(im)
         self.save_img_jpg("inverted_rgba", im_invert)
+    def crop_max_square(self,im):
+        return self.crop_center(im, (min(im.size)), (min(im.size)))
+    def expand_to_square(self,im,bgcolor):
+        width, height = im.size
+        if width == height:
+            return im
+        elif width > height:
+            result = Image.new(im.mode, (width,width), bgcolor)
+            result.paste(im, (0,(width-height)//2))
+            return result
+        else:
+            result = Image.new(im.mode, (height, height), bgcolor)
+            result.paste(im,((height-width)//2, 0))
+            return result
+    def mask_circle_solid(self,im,bgcolor,blur_radius,offset=0):
+        background = Image.new(im.mode, im.size, bgcolor)
 
+        offset = blur_radius*2 + offset
+        mask = Image.new("L", im.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((offset, offset, im.size[0] - offset, im.size[1] - offset), fill = 255)
+        mask = mask.filter(ImageFilter.GaussianBlur(blur_radius))
+
+        return Image.composite(im,background, mask)
+    def mask_circle_transparent(self, im, blur_radius, offset=0):
+        offset = blur_radius * 2 + offset
+        mask = Image.new("L", im.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((offset, offset, im.size[0] - offset, im.size[1] - offset), fill = 255)
+        mask = mask.filter(ImageFilter.GaussianBlur(blur_radius))
+
+        result = im.copy()
+        result.putalpha(mask)
+        return result
+    def thumbnail(self):
+        """ Generates TODO thumbnails using TODO methods"""
+        self.load()
+        im = self.im
+        # crop into a rectangle
+        thumb_width = 150
+        # Rectangular square crop
+        im_thumb = self.crop_center(im, thumb_width, thumb_width)
+        self.save_img_jpg("rectangle_crop1", im_thumb)
+        im_thumb = self.crop_max_square(im).resize((thumb_width, thumb_width), Image.LANCZOS)
+        self.save_img_jpg("rectangle_crop2", im_thumb)
+        # Adding margins to make a square
+        im_thumb = self.expand_to_square(im,(0,0,0)).resize((thumb_width, thumb_width), Image.LANCZOS)
+        self.save_img_jpg("margin_crop", im_thumb)
+        # crop into a circle
+        # solid bg
+        im_square = self.crop_max_square(im).resize((thumb_width, thumb_width), Image.LANCZOS)
+        im_thumb = self.mask_circle_solid(im_square, (0,0,0), 4)
+        self.save_img_jpg("circle_bg_solid", im_thumb)
+        # transparent bg
+        im_square = self.crop_max_square(im).resize((thumb_width, thumb_width), Image.LANCZOS)
+        im_thumb = self.mask_circle_transparent(im_square, 4)
+        im_thumb.save("circle_bg_transparent.png")
+    def batch_thumbnail(self):
+        src_dir = 'data/src'
+        dst_dir = 'data/dest'
+        files = glob.glob(os.path.join(src_dir, '*.jpg'))
+
+        for f in files:
+            im = Image.open(f)
+            im_thumb = self.crop_max_square(im).resize((150 ,150), Image.LANCZOS)
+            ftitle, fext = os.path.splitext(os.path.basename(f))
+            im_thumb.save(os.path.join(dst_dir, ftitle + "_thumbnail" + fext), quality=95)
 
 
 pill = Pillow()
@@ -100,5 +168,5 @@ pill.max_square_crop()
 lg.info("Inverting an RGB and an RGBA image")
 pill.invert_image()
 pill.invert_rgba()
-
-
+pill.thumbnail()
+pill.batch_thumbnail()
