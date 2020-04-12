@@ -152,7 +152,123 @@ class Pillow(object):
             im_thumb = self.crop_max_square(im).resize((150 ,150), Image.LANCZOS)
             ftitle, fext = os.path.splitext(os.path.basename(f))
             im_thumb.save(os.path.join(dst_dir, ftitle + "_thumbnail" + fext), quality=95)
-
+    def concatenate(self):
+        self.load()
+        im1 = self.im
+        im2 = self.im
+        concatenated_img = self.get_concat_h(im1,im2)
+        self.save_img_jpg('concatenated_same_height', concatenated_img)
+        concatenated_img = self.get_concat_v(im1,im2)
+        self.save_img_jpg('concatenated_same_width', concatenated_img)
+        im2 = Image.open('src/rocket.jpg')
+        concatenated_img = self.get_concat_h_cut(im1,im2)
+        self.save_img_jpg('concatenated_cut', concatenated_img)
+        concatenated_img = self.get_concat_v_cut(im1,im2)
+        self.save_img_jpg('concatenated_cut', concatenated_img)
+        concatenated_img = self.get_concat_h_cut_center(im1,im2)
+        self.save_img_jpg('concatenated_cut_center', concatenated_img)
+        concatenated_img = self.get_concat_v_cut_center(im1,im2)
+        self.save_img_jpg('concatenated_cut_center', concatenated_img)
+        concatenated_img = self.get_concat_h_blank(im1,im2,(0,0,0))
+        self.save_img_jpg('concatenated_blank', concatenated_img)
+        concatenated_img = self.get_concat_v_blank(im1,im2,(0,50,200))
+        self.save_img_jpg('concatenated_blank', concatenated_img)
+        concatenated_img = self.get_concat_h_resize(im1,im2)
+        self.save_img_jpg('concatenated_height_resize', concatenated_img)
+        concatenated_img = self.get_concat_v_resize(im1,im2,resize_big_image=False)
+        self.save_img_jpg('concatenated_width_resize', concatenated_img)
+        concatenated_img = self.concat_multiple([im1,im2,im1])
+        self.save_img_jpg('concatenated_multiple', concatenated_img)
+        im_s = im1.resize((im1.width // 2, im1.height // 2))
+        concatenated_img = self.get_concat_tile_repeat(im_s,3,4)
+        self.save_img_jpg('concatenated_tile', concatenated_img)
+    def get_concat_h(self,im1,im2):
+        dest = Image.new('RGB', (im1.width + im2.width, im1.height))
+        dest.paste(im1,(0,0))
+        dest.paste(im2, (im1.width,0))
+        return dest
+    def get_concat_v(self,im1,im2):
+        dest = Image.new('RGB', (im1.width, im1.height + im2.height))
+        dest.paste(im1,(0, 0))
+        dest.paste(im2, (0, im1.height))
+        return dest
+    def get_concat_h_cut(self,im1,im2):
+        dest =  Image.new('RGB', (im1.width+im2.width, min(im1.height, im2.height)))
+        dest.paste(im1,(0,0))
+        dest.paste(im2,(im1.width,0))
+        return dest
+    def get_concat_v_cut(self,im1, im2):
+        dest = Image.new('RGB', (min(im1.width,im2.width),im1.height+im2.height))
+        dest.paste(im1,(0,0))
+        dest.paste(im2,(0,im1.height))
+        return dest
+    def get_concat_h_cut_center(self,im1,im2):
+        dest =  Image.new('RGB', (im1.width+im2.width, min(im1.height, im2.height)))
+        dest.paste(im1,(0,0))
+        dest.paste(im2,(im1.width,((im1.height-im2.height)//2)))
+        return dest
+    def get_concat_v_cut_center(self,im1, im2):
+        dest = Image.new('RGB', (min(im1.width,im2.width),im1.height+im2.height))
+        dest.paste(im1,(0,0))
+        dest.paste(im2,(((im1.width-im2.width)//2),im1.height))
+        return dest
+    def get_concat_h_blank(self,im1,im2,color=(0,0,0)):
+        dest = Image.new('RGB', (im1.width+im2.width, max(im1.height, im2.height)), color=color)
+        dest.paste(im1,(0,0))
+        dest.paste(im2,(im1.width,0))
+        return dest
+    def get_concat_v_blank(self, im1, im2, color=(0,0,0)):
+        dest = Image.new('RGB', (max(im1.width,im2.width), im1.height+im2.height), color=color)
+        dest.paste(im1,(0,0))
+        dest.paste(im2,(0,im1.height))
+        return dest
+    def get_concat_h_resize(self,im1,im2, resample=Image.BICUBIC, resize_big_image=True):
+        if im1.height == im2.height:
+            _im1 = im1
+            _im2 = im2
+        elif (((im1.height > im2.height) and resize_big_image)or ((im1.height < im2.height)and not resize_big_image)):
+            _im1 = im1.resize((int(im1.width * im2.height / im1.height), im2.height), resample=resample)
+            _im2 = im2
+        else:
+            _im1 = im1
+            _im2 = im2.resize((int(im2.width * im1.height / im2.height), im1.height), resample=resample)
+        dest = Image.new('RGB', (_im1.width + _im2.width, _im1.height))
+        dest.paste(_im1, (0,0))
+        dest.paste(_im2,(_im1.width, 0))
+        return dest
+    def get_concat_v_resize(self,im1,im2, resample=Image.BICUBIC, resize_big_image=True):
+        if im1.width == im2.width:
+            _im1 = im1
+            _im2 = im2
+        elif (((im1.width > im2.width) and resize_big_image)or ((im1.width < im2.width)and not resize_big_image)):
+            _im1 = im1.resize((im2.width, int(im1.height * im2.width / im1.width)), resample=resample)
+            _im2 = im2
+        else:
+            _im1 = im1
+            _im2 = im2.resize((im1.width, int(im2.height * im1.width / im2.width)), resample=resample)
+        dest = Image.new('RGB', (_im1.width, _im2.height+ _im1.height))
+        dest.paste(_im1, (0,0))
+        dest.paste(_im2,(0,_im1.height))
+        return dest
+    def concat_multiple(self,im_list):
+        _im = im_list.pop(0)
+        for im in im_list:
+            _im = self.get_concat_h(_im,im)
+        return _im
+    def get_concat_h_repeat(self,im,column):
+        dest = Image.new('RGB', (im.width*column, im.height))
+        for x in range(column):
+            dest.paste(im,(x*im.width,0))
+        return dest
+    def get_concat_v_repeat(self, im, row):
+        dest = Image.new('RGB', (im.width,im.height*row))
+        for y in range(row):
+            dest.paste(im, (0,y*im.height))
+        return dest
+    def get_concat_tile_repeat(self,im, row, column):
+        dest_h = self.get_concat_h_repeat(im, column)
+        return self.get_concat_v_repeat(dest_h, row)
+    
 
 pill = Pillow()
 lg.info("printing image data...")
@@ -170,3 +286,4 @@ pill.invert_image()
 pill.invert_rgba()
 pill.thumbnail()
 pill.batch_thumbnail()
+pill.concatenate()
