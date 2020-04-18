@@ -4,6 +4,7 @@ from json import load as jload
 from PIL import Image, ImageFilter,ImageDraw, ImageFont, ImageOps
 # for batch processing
 import os, glob
+import qrcode
 
 # Configure logger lg with config for appLogger from config.json["logging"]
 with open('config.json', 'r') as f:
@@ -268,7 +269,32 @@ class Pillow(object):
     def get_concat_tile_repeat(self,im, row, column):
         dest_h = self.get_concat_h_repeat(im, column)
         return self.get_concat_v_repeat(dest_h, row)
-    
+    def gen_qr_code(self):
+        """ generates a qr code of a link(https://www.bhg.com.au/colours-that-go-with-blue-complementary-colours-for-blue) and embeds it into an image. 
+
+        the qr code has a high error correction, a blue background(#002366) and gray foreground(#C0C0C0).
+
+        the qr code is embedded on the blue couch image.
+        """
+        img_bg = Image.open('src/blue-couch.jpg')
+        data = "https://www.bhg.com.au/colours-that-go-with-blue-complementary-colours-for-blue"
+        fg = "#002366"
+        bg = '#C0C0C0'
+        im = self.gen_qr_util(img_bg,data,fg,bg)
+        self.save_img_jpg('qr_code_embedded', im)
+        
+    def gen_qr_util(self, im, data, fg, bg):
+        qr = qrcode.QRCode(
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=2,
+            border=2
+        )
+        qr.add_data(str(data))
+        qr.make()
+        img = qr.make_image(fill_color=bg, back_color=fg)
+        pos = (im.size[0] - img.size[0],im.size[1] - img.size[1])
+        im.paste(img,pos)
+        return im
 
 pill = Pillow()
 lg.info("printing image data...")
@@ -287,3 +313,5 @@ pill.invert_rgba()
 pill.thumbnail()
 pill.batch_thumbnail()
 pill.concatenate()
+lg.info('Embedding a qr code into an image...')
+pill.gen_qr_code()

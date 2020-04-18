@@ -19,7 +19,7 @@ Tutorial Followed : [Pillow Tag at https://note.nkmk.me/en/](https://note.nkmk.m
 3. [x] Invert image with Python, Pillow (Negative / positive inversion)
 4. [x] Generate square or circular thumbnail images with Python, Pillow
 5. [x] Concatenate images with Python, Pillow
-6. [ ] Generate QR code image with Python, Pillow, qrcode
+6. [x] Generate QR code image with Python, Pillow, qrcode
 
 ## Project Files
 
